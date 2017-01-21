@@ -1,4 +1,4 @@
-# gnott
+# gnott - WIP
 This script takes a string argument in HGVS format, and translates it to genomic notation using transvar (transvar.readthedocs.io)
 
 Note - this scipt can theoretically take any input that Transvar accepts. The only requirement is that the string has a ":x" sequence in it, where the 'x' is one of g/c/p characters, denoting the type of encoding.
