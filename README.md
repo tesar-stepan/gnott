@@ -1,12 +1,11 @@
 # gnott
 This script takes a string argument in HGVS format, and translates it to genomic notation using transvar (transvar.readthedocs.io)
+Note - this scipt can theoretically take any input that Transvar accepts. The only requirement is that the string has a ":x" sequence in it, where the 'x' is one of g/c/p characters, denoting the type of encoding.
 
-NOTE - this scipt can theoretically take any input that Transvar accepts. The only requirement is that the string has a ":x" sequence in it, where the 'x' is one of g/c/p characters, denoting the type of encoding.
--------------------------------------------------------
-#Protein level annotation example:
+Protein level annotation example:
 input  : $python gnott.py 'NM_000492.3:p.Gly480Cys'
 output : chr7:g.117199563G>T
--------------------------------------------------------
+
 OUTPUT MODIFIER: use second argument to modify the output format.
         Possible values: 'g', 'c', 'p', 'pp'
             g  - genomic reference sequence
