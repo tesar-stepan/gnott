@@ -117,19 +117,24 @@ elif(DEBUG):
 #Preparing arguments for transvar
 protMode = ""
 tvarMode = ""
-if(inMode == "pp"):
-    protMode = "--aa3"
-    inMode = "p"
-tvarMode = "%sanno" % inMode
 
+if(outMode == "pp"):
+    protMode = "--aa3"
+    outMode = "p"
+
+tvarMode = "%sanno" % inMode
+targs = ["transvar", tvarMode, "-i", inputSequence, "--ucsc" ]
+
+if(protMode != ""):
+    targs.append(protMode)
 
 #Calling transvar. Its output is stored in the 'tvar' variable
 try:
-    p = subprocess.Popen(["transvar", tvarMode, "-i", inputSequence, "--ucsc", ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = subprocess.Popen(targs, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     tvar, error = p.communicate()
     if(p.returncode != 0):
         print MSG_TRANSVAR_EX, ":", tvar, error
-        sys.exit()
+        sys.exit()    
 except OSError as e:
     if(e.errno == os.errno.ENOENT):
         print MSG_TRANSVAR_NO
