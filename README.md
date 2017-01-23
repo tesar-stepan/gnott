@@ -1,6 +1,14 @@
 # gnott - WIP
-This script takes a string argument in HGVS format, and translates it to genomic notation using transvar (transvar.readthedocs.io)
+This script takes a string argument in HGVS format, and translates it to genomic notation using transvar (transvar.readthedocs.io).
+Useful for cerain use-case specific batch procesing.
 
+## Instalation
+Gnott itself is a simple python script - just download and run in python, but it requires that transvar is present in your system.
+
+See: http://transvar.readthedocs.io/en/latest/download_and_install.html
+And do these before running gnott: http://transvar.readthedocs.io/en/latest/quick_start.html
+
+## Usage
 This scipt can theoretically take any input that Transvar accepts. The only requirement is that the string has a ":x" sequence in it, where the 'x' is one of g/c/p characters, denoting the type of encoding.
 
 Protein level annotation example:
@@ -42,7 +50,7 @@ INPUT TYPE (g/c/p) is detected automatically. See above for c/p type input examp
 
 If the input is genomic level annotation (g),then the output is HGVS coded protein and mutation.
 
-In this case, OUTPUT MODIFIER -o can only be c or p, and defaults to p. If modifier g is passesd it will be ignored.
+In this case, output modifier -o can only be c or p, and defaults to p. If modifier g is passed, it will be ignored.
 
 Genomic level annotation example:
 
