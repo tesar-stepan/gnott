@@ -1,4 +1,6 @@
-# gnott - WIP
+# Gnott
+## Genomic Notation Translator
+
 This script takes a string argument in HGVS format, and translates it to genomic notation using transvar (transvar.readthedocs.io).
 Useful for cerain use-case specific batch procesing.
 
