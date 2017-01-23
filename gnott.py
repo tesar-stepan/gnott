@@ -5,11 +5,12 @@ import os
 import re
 import sys
 import subprocess
+import argparse
+from argparse import RawTextHelpFormatter
 
 DEBUG = False;
 VALID_OUT_MODIFIERS = ['g', 'c', 'p', 'pp']
-MSG_INVALID_ARG2 = "\033[91m Invalid output modifier (second argument). Valid values are: %s" % str(VALID_OUT_MODIFIERS)[1:-1]
-MSG_MISSING_ARG = "\033[91m Missing required argument #%d - %s"
+VALID_OM_USAGE = str(VALID_OUT_MODIFIERS).translate(None, " ['")
 MSG_TRANSVAR_NO = "\033[91m Transvar was not detected, please install transvar first."
 MSG_TRANSVAR_CALL_ERR = "\033[91m ERROR - Transvar call failed."
 MSG_TRANSVAR_OUTPUT_ERR = "\033[91m ERROR - Transvar output is in an unrecognised format:"
@@ -18,64 +19,55 @@ MSG_OUTPUT_CODESEQ_NO = "\033[91m ERROR - Could't find mutation codes in transva
 MSG_OUTPUT_MUTSEQ_NO = "\033[91m ERROR - Could't find mutation sequence for type '%s' in transvar output:"
 MSG_OUTPUT_CHROMOS_NO = "\033[91m ERROR - Could't find the chromosome number in transvar output:"
 MSG_TRANSVAR_EX = "\033[91m TRANSVAR EXCEPTION"
-MSG_ARGUMENT_EX = "\033[91m ARGUMENT EXCEPTION"
 MSG_VALUE_ERR = "\033[91m ERROR DURING Popen CALL"
 MSG_INPUT_PARSE_ERR = "\033[91m INPUT PROCESSING ERROR - %s"
-MSG_VALS_MISSINGARG1 = (1, "String with the notation you'd like to translate.")
+MSG_ARG1_DESC = "HGVS encoded string to be parsed."
+MSG_ARG2_DESC = "denotes what format should the output string be in."
 MSG_USAGE = """
-    GNOTT USAGE:
-    This script takes a string argument in HGVS format, and
-    translates it to genomic notation using transvar
-    (transvar.readthedocs.io)
-    NOTE - this scipt can theoretically take any input that
-           Transvar accepts. The only requirement is that
-           the string has a ":x" sequence in it, where the
-           'x' is one of g/c/p characters, denoting the
-           type of encoding.
-    -------------------------------------------------------
-    Protein level annotation example:
-        input  : $python gnott.py 'NM_000492.3:p.Gly480Cys'
-        output : chr7:g.117199563G>T
-    -------------------------------------------------------
-    OUTPUT MODIFIER: use second argument to modify the output format.
-        Possible values: 'g', 'c', 'p', 'pp'
-            g  - genomic reference sequence
-               - ignored if input sequence is in g.
-            c  - coding DNA reference sequence
-            p  - protein reference sequence, 1-letter coding
-            pp - protein reference sequence, 3-letter coding
-            DEFAULTS TO: 'g' or 'p' if input sequence is in g.
+gnott.py [-h] [-o {%s}] string
 
-    Protein level annotation example, output modifier 'c'
-        input  : $python gnott.py 'NM_000492.3:p.Gly480Cys' c
-        output : chr7:c.1438G>T
+GUIDE:
+This script takes a string argument in HGVS format, and
+translates it to genomic notation using transvar
+(transvar.readthedocs.io)
+NOTE - this scipt can theoretically take any input that
+       Transvar accepts. The only requirement is that
+       the string has a ":x" sequence in it, where the
+       'x' is one of g/c/p characters, denoting the
+       type of encoding.
+-------------------------------------------------------
+Protein level annotation example:
+    input  : $python gnott.py 'NM_000492.3:p.Gly480Cys'
+    output : chr7:g.117199563G>T
+-------------------------------------------------------
+OUTPUT MODIFIER: use second argument to modify the output format.
+    Possible values: 'g', 'c', 'p', 'pp'
+        g  - genomic reference sequence
+           - ignored if input sequence is in g.
+        c  - coding DNA reference sequence
+        p  - protein reference sequence, 1-letter coding
+        pp - protein reference sequence, 3-letter coding
+        DEFAULTS TO: 'g' or 'p' if input sequence is in g.
 
-    cDNA level annotation example, output modifier 'p'
-        input  : $python gnott.py 'NM_000492.3:c.1438G>T' p
-        output : chr7:p.G480C
-    -------------------------------------------------------
-    INPUT TYPE (g/c/p) is detected automatically. See above
-    for c/p type input examples.
-    If the input is genomic level annotation (g),
-    then the output is NCBI Reference Sequence and mutation.
-        In this case, OUTPUT MODIFIER can only be c or p,
-        and defaults to p. If modifier g is passesd it will
-        be ignored.
-    Genomic level annotation example:
-        input  : $python gnott.py 'chr7:g.117199563G>T' c
-        output : NM_000492:c.1438G>T
-            """
+Protein level annotation example, output modifier 'c'
+    input  : $python gnott.py 'NM_000492.3:p.Gly480Cys' -o c
+    output : chr7:c.1438G>T
 
-class ArgException(Exception):
-    """
-        Exception extension thrown when there is a problem with arguments.
-    """
-    def __init__(self, value):
-        self.value = "%s: %s" % (MSG_ARGUMENT_EX, value)
-    def __str__(self):
-        return self.value
-
-
+cDNA level annotation example, output modifier 'p'
+    input  : $python gnott.py 'NM_000492.3:c.1438G>T' -o p
+    output : chr7:p.G480C
+-------------------------------------------------------
+INPUT TYPE (g/c/p) is detected automatically. See above
+for c/p type input examples.
+If the input is genomic level annotation (g),
+then the output is NCBI Reference Sequence and mutation.
+    In this case, OUTPUT MODIFIER can only be c or p,
+    and defaults to p. If modifier g is passesd it will
+    be ignored.
+Genomic level annotation example:
+    input  : $python gnott.py 'chr7:g.117199563G>T' -o c
+    output : NM_000492:c.1438G>T
+        """ % VALID_OM_USAGE
 #variable setup
 inputSequence = ""
 inMode = ""
@@ -84,23 +76,14 @@ tvar = ""
 output = ""
 
 #Arguments checks and read
-try:
-    if(len(sys.argv) < 2 ):
-        raise ArgException(MSG_MISSING_ARG % MSG_VALS_MISSINGARG1)
-    elif(len(sys.argv) > 2):
-        arg2 = sys.argv[2]
-        if(arg2 not in VALID_OUT_MODIFIERS):
-            raise ArgException(MSG_INVALID_ARG2)
-        elif(DEBUG):
-            print "Second argument primary validation success (%s)." % arg2
-        outMode = arg2
+parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter, usage=MSG_USAGE)
+parser.add_argument("string", help=MSG_ARG1_DESC)
+parser.add_argument("-o", help=MSG_ARG2_DESC, choices=VALID_OUT_MODIFIERS)
+args = parser.parse_args()
+if(args.o):
+    outMode = args.o
 
-    inputSequence = sys.argv[1]
-
-except ArgException as e:
-    print e.value
-    print MSG_USAGE
-    sys.exit()
+inputSequence = args.string
 
 
 #Preprocessing the input sequence
@@ -158,7 +141,6 @@ except ValueError as e:
     traceback.print_exc()
     sys.exit()
 
-# 3-letter --aa3
 #Processing the transvar output
 if(DEBUG):
     print tvar
