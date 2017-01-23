@@ -1,5 +1,5 @@
 #Script for translating HGVS to genomic notation
-# using transvar: transvar.readthedocs.io
+#using transvar: transvar.readthedocs.io
 
 import os
 import re
@@ -8,9 +8,15 @@ import subprocess
 import argparse
 from argparse import RawTextHelpFormatter
 
-DEBUG = False;
-VALID_OUT_MODIFIERS = ['g', 'c', 'p', 'pp']
-VALID_OM_USAGE = str(VALID_OUT_MODIFIERS).translate(None, " ['")
+DEBUG = False
+
+ING = OUG = "g"
+INC = OUC = "c"
+INP = OUP = "p"
+OUPP = "pp"
+
+VALID_OUT_MODIFIERS = [OUG, OUC, OUP, OUPP]
+VALID_OM_USAGE = str(VALID_OUT_MODIFIERS).translate(None, " []'")
 MSG_TRANSVAR_NO = "\033[91m Transvar was not detected, please install transvar first."
 MSG_TRANSVAR_CALL_ERR = "\033[91m ERROR - Transvar call failed."
 MSG_TRANSVAR_OUTPUT_ERR = "\033[91m ERROR - Transvar output is in an unrecognised format:"
@@ -24,7 +30,7 @@ MSG_INPUT_PARSE_ERR = "\033[91m INPUT PROCESSING ERROR - %s"
 MSG_ARG1_DESC = "HGVS encoded string to be parsed."
 MSG_ARG2_DESC = "denotes what format should the output string be in."
 MSG_USAGE = """
-gnott.py [-h] [-o {%s}] string
+gnott.py [-h] [-o {0}] string
 
 GUIDE:
 This script takes a string argument in HGVS format, and
@@ -41,7 +47,7 @@ Protein level annotation example:
     output : chr7:g.117199563G>T
 -------------------------------------------------------
 OUTPUT MODIFIER: use second argument to modify the output format.
-    Possible values: 'g', 'c', 'p', 'pp'
+    Possible values: {0}
         g  - genomic reference sequence
            - ignored if input sequence is in g.
         c  - coding DNA reference sequence
@@ -67,70 +73,76 @@ then the output is NCBI Reference Sequence and mutation.
 Genomic level annotation example:
     input  : $python gnott.py 'chr7:g.117199563G>T' -o c
     output : NM_000492:c.1438G>T
-        """ % VALID_OM_USAGE
+        """.format(VALID_OM_USAGE)
+
+
+#outputs message only if DEBUG mode set to true
+def printd(msg):
+    if (DEBUG): print msg
+    return
+
+
 #variable setup
 inputSequence = ""
 inMode = ""
-outMode = "g"
+outMode = OUG
 tvar = ""
 output = ""
 
 #Arguments checks and read
-parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter, usage=MSG_USAGE)
+parser = argparse.ArgumentParser(
+    formatter_class=RawTextHelpFormatter, usage=MSG_USAGE)
 parser.add_argument("string", help=MSG_ARG1_DESC)
 parser.add_argument("-o", help=MSG_ARG2_DESC, choices=VALID_OUT_MODIFIERS)
 args = parser.parse_args()
-if(args.o):
+if (args.o):
     outMode = args.o
 
 inputSequence = args.string
 
-
 #Preprocessing the input sequence
 inputSequence.replace(" ", "")
-delimFound = False;
-for c in inputSequence:
-    if(delimFound):
-        inMode = c
+delimFound = False
+for ch in inputSequence:
+    if (delimFound):
+        inMode = ch
         break
-    if(c == ":"):
-        delimFound = True;
+    if (ch == ":"):
+        delimFound = True
 
-if(inMode == ""):
+if (inMode == ""):
     print MSG_INPUT_PARSE_ERR % "':' not found"
     sys.exit()
-elif(DEBUG):
-    print "input mode detected: %s" % c
 
-if(inMode == "g" and outMode == "g"):
-    outMode = "p"
+printd("input mode detected: %s" % ch)
 
+if (inMode == ING and outMode == OUG):
+    outMode = OUP
 
 #Preparing arguments for transvar
 protMode = ""
 tvarMode = ""
 
-if(outMode == "pp"):
+if (outMode == OUPP):
     protMode = "--aa3"
-    outMode = "p"
+    outMode = OUP
 
 tvarMode = "%sanno" % inMode
-targs = ["transvar", tvarMode, "-i", inputSequence, "--ucsc" ]
+targs = ["transvar", tvarMode, "-i", inputSequence, "--ucsc"]
 
-if(protMode != ""):
-    if(DEBUG):
-        print "Protein mode: %s" % protMode
+if (protMode != ""):
+    printd("Protein mode: %s" % protMode)
     targs.append(protMode)
 
 #Calling transvar. Its output is stored in the 'tvar' variable
 try:
     p = subprocess.Popen(targs, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     tvar, error = p.communicate()
-    if(p.returncode != 0):
+    if (p.returncode != 0):
         print MSG_TRANSVAR_EX, ":", tvar, error
         sys.exit()
 except OSError as e:
-    if(e.errno == os.errno.ENOENT):
+    if (e.errno == os.errno.ENOENT):
         print MSG_TRANSVAR_NO
     else:
         print MSG_TRANSVAR_CALL_ERR
@@ -142,20 +154,20 @@ except ValueError as e:
     sys.exit()
 
 #Processing the transvar output
-if(DEBUG):
-    print tvar
+printd(tvar)
 
 lines = tvar.splitlines()
-if(tvar == "" or len(lines) < 2):
+if (tvar == "" or len(lines) < 2):
     print MSG_TRANSVAR_OUTPUT_ERR
     print tvar
 result = lines[1]
 
 ## extracting the chromosome and mutation coding sequence
 try:
-    coding_full = re.search('\schr\d:(g.\d+\S+/)(c.\d+\S+/)(p.\D{1,3}\d+\D{1,3})\s', result).group(0)
-    if (DEBUG):
-        print "Found mutation codes: %s" % coding_full
+    coding_full = re.search(
+        '\schr\d:(g.\d+\S+/)(c.\d+\S+/)(p.\D{1,3}\d+\D{1,3})\s',
+        result).group(0)
+    printd("Found mutation codes: %s" % coding_full)
     coding_full = coding_full.strip()
 except AttributeError:
     print MSG_OUTPUT_CODESEQ_NO
@@ -163,13 +175,12 @@ except AttributeError:
     sys.exit()
 
 ## composing base of output for g-type input
-if(inMode == "g"):
+if (inMode == ING):
     try:
         ### extracting the NCBI ref. seq. for g-type input
         ref = re.search('\s[\S]{2}[_]\d+(.\d)?\s', result).group(0)
 
-        if (DEBUG):
-            print "Found ref. seq.: %s" % ref
+        printd("Found ref. seq.: %s" % ref)
 
         ref = ref.strip()
         output = ref
@@ -183,7 +194,7 @@ if(inMode == "g"):
 else:
     try:
         chromos = re.search('chr\d:', coding_full).group(0)
-        output = chromos;
+        output = chromos
     except AttributeError:
         print MSG_OUTPUT_CHROMOS_NO
         print result
@@ -191,21 +202,20 @@ else:
 
 ## composing rest of output
 try:
-    stripSlash = True;
-    regexp = "g.\d+\S{,8}/" #g by default for non g-type input
-    if(inMode == "g" or outMode == "p"):
-        stripSlash = False;
-        regexp = "p.\D{1,3}\d+\D{1,3}" #p by default for g-type input
-    if(outMode == 'c'):
-        stripSlash = True;
+    stripSlash = True
+    regexp = "g.\d+\S{,8}/"  #g by default for non g-type input
+    if (inMode == ING or outMode == OUP):
+        stripSlash = False
+        regexp = "p.\D{1,3}\d+\D{1,3}"  #p by default for g-type input
+    if (outMode == OUC):
+        stripSlash = True
         regexp = "c.\d+\S+/"
     mutc = re.search(regexp, coding_full).group(0)
 
-    if (DEBUG):
-        print "Found mutation seq %s: %s" % (outMode, mutc)
+    print("Found mutation seq %s: %s" % (outMode, mutc))
 
     mutc = mutc.strip()
-    if(stripSlash):
+    if (stripSlash):
         mutc = mutc.rstrip('/')
     output += mutc
 except AttributeError:
