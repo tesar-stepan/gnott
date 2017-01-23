@@ -16,11 +16,11 @@ use to modify the output format.
 
 Possible values: 'g', 'c', 'p', 'pp'
 
-*g  - genomic reference sequence
-   * ignored if input sequence is in g.  
-*c  - coding DNA reference sequence
-*p  - protein reference sequence, 1-letter coding
-*pp - protein reference sequence, 3-letter coding
+  *g  - genomic reference sequence
+    * ignored if input sequence is in g.  
+  *c  - coding DNA reference sequence
+  *p  - protein reference sequence, 1-letter coding
+  *pp - protein reference sequence, 3-letter coding
 
 DEFAULTS TO: 'g' or 'p' if input sequence is in g.
 
