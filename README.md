@@ -36,14 +36,14 @@ DEFAULTS TO: 'g' or 'p' if input sequence is in g.
 Protein level annotation example, output modifier 'c'
 
 ```bash
-$python gnott.py 'NM_000492.3:p.Gly480Cys' -o c
+python gnott.py 'NM_000492.3:p.Gly480Cys' -o c
 chr7:c.1438G>T
 ```
 
 cDNA level annotation example, output modifier 'p'
 
 ```bash
-$python gnott.py 'NM_000492.3:c.1438G>T' -o p
+python gnott.py 'NM_000492.3:c.1438G>T' -o p
 chr7:p.G480C
 ```
 
