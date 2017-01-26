@@ -13,7 +13,7 @@ See: http://transvar.readthedocs.io/en/latest/download_and_install.html
 
 And: http://transvar.readthedocs.io/en/latest/quick_start.html
 
-But you can just run these:
+Or you can just run these:
 
 ```bash
 sudo pip install transvar
