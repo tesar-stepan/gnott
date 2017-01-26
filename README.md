@@ -11,6 +11,8 @@ See: http://transvar.readthedocs.io/en/latest/download_and_install.html
 
 And do these before running gnott: http://transvar.readthedocs.io/en/latest/quick_start.html
 
+ > DO NOT SKIP THE LINK ABOVE. Transvar wont work unless you do a very easy and quick setup (two commands)
+
 ## Usage
 This scipt can theoretically take any input that Transvar accepts. The only requirement is that the string has a ":x" sequence in it, where the 'x' is one of g/c/p characters, denoting the type of encoding. However, I wrote gnott for a very specific use-case, so only the formats you see below were tested.
 
