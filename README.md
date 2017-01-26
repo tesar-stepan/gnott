@@ -7,11 +7,24 @@ Useful for cerain use-case specific batch procesing.
 ## Instalation
 Gnott itself is a simple python script - just download and run in python, but it requires that transvar is present in your system.
 
+#### Transvar setup:
+
 See: http://transvar.readthedocs.io/en/latest/download_and_install.html
 
-And do these before running gnott: http://transvar.readthedocs.io/en/latest/quick_start.html
+And: http://transvar.readthedocs.io/en/latest/quick_start.html
 
- > DO NOT SKIP THE LINK ABOVE. Transvar wont work unless you do a very easy and quick setup (two commands)
+But you can just run these:
+
+```bash
+sudo pip install transvar
+#or locally: pip install --user transvar
+
+# set up databases
+transvar config --download_anno --refversion hg19
+
+# download have a reference
+transvar config --download_ref --refversion hg19
+```
 
 ## Usage
 This scipt can theoretically take any input that Transvar accepts. The only requirement is that the string has a ":x" sequence in it, where the 'x' is one of g/c/p characters, denoting the type of encoding. However, I wrote gnott for a very specific use-case, so only the formats you see below were tested.
