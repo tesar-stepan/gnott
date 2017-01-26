@@ -43,7 +43,7 @@ NOTE - this scipt can theoretically take any input that
        type of encoding.
 -------------------------------------------------------
 Protein level annotation example:
-    input  : $python gnott.py 'NM_000492.3:p.Gly480Cys'
+    input  : python gnott.py 'NM_000492.3:p.Gly480Cys'
     output : chr7:g.117199563G>T
 -------------------------------------------------------
 OUTPUT MODIFIER: use second argument to modify the output format.
@@ -56,11 +56,11 @@ OUTPUT MODIFIER: use second argument to modify the output format.
         DEFAULTS TO: 'g' or 'p' if input sequence is in g.
 
 Protein level annotation example, output modifier 'c'
-    input  : $python gnott.py 'NM_000492.3:p.Gly480Cys' -o c
+    input  : python gnott.py 'NM_000492.3:p.Gly480Cys' -o c
     output : chr7:c.1438G>T
 
 cDNA level annotation example, output modifier 'p'
-    input  : $python gnott.py 'NM_000492.3:c.1438G>T' -o p
+    input  : python gnott.py 'NM_000492.3:c.1438G>T' -o p
     output : chr7:p.G480C
 -------------------------------------------------------
 INPUT TYPE (g/c/p) is detected automatically. See above
@@ -71,7 +71,7 @@ then the output is NCBI Reference Sequence and mutation.
     and defaults to p. If modifier g is passesd it will
     be ignored.
 Genomic level annotation example:
-    input  : $python gnott.py 'chr7:g.117199563G>T' -o c
+    input  : python gnott.py 'chr7:g.117199563G>T' -o c
     output : NM_000492:c.1438G>T
         """.format(VALID_OM_USAGE)
 
