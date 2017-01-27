@@ -29,14 +29,17 @@ transvar config --download_ref --refversion hg19
 ## Usage
 This scipt can theoretically take any input that Transvar accepts. The only requirement is that the string has a ":x" sequence in it, where the 'x' is one of g/c/p characters, denoting the type of encoding. However, I wrote gnott for a very specific use-case, so only the formats you see below were tested.
 
-Protein level annotation example:
+### Limitation
+this script will skip mutations ending with 'X' or 'Fs', since the output of Transvar for this type of input is not useful for the use-case this script was originally created for.
+
+#### Basic example:
 
 ```bash
 python gnott.py 'NM_000492.3:p.Gly480Cys'
 chr7:g.117199563G>T
 ```
 
-OUTPUT MODIFIER: -o 
+### OUTPUT MODIFIER: -o 
 
 use to modify the output format.
 
@@ -50,14 +53,16 @@ Possible values: 'g', 'c', 'p', 'pp'
 
 DEFAULTS TO: 'g' or 'p' if input sequence is in g.
 
-Protein level annotation example, output modifier 'c'
+#### Example, output modifier 'c'
 
 ```bash
 python gnott.py 'NM_000492.3:p.Gly480Cys' -o c
 chr7:c.1438G>T
 ```
 
-cDNA level annotation example, output modifier 'p'
+### Input level detection
+
+#### example with cDNA input, output modifier 'p'
 
 ```bash
 python gnott.py 'NM_000492.3:c.1438G>T' -o p
@@ -70,7 +75,7 @@ If the input is genomic level annotation (g),then the output is HGVS coded prote
 
 In this case, output modifier -o can only be c or p, and defaults to p. If modifier g is passed, it will be ignored.
 
-Genomic level annotation example:
+#### example with protein level input, output modifier 'c' 
 
 ```bash
 python gnott.py 'chr7:g.117199563G>T' -o c
