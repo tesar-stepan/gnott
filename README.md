@@ -32,10 +32,11 @@ This scipt can theoretically take any input that Transvar accepts. The only requ
 ### Limitation
 this script will skip mutations ending with 'X' or 'Fs', since the output of Transvar for this type of input is not useful for the use-case this script was originally created for.
 
+```bash
 gnott.py \[-h] [-o g,c,p,pp] string
-
--o {g,c,p,pp}  Denotes what format should the output string be in.
--debug         Runs debug mode, shows more details about progress and errrors.
+```
+ * -o {g,c,p,pp}  Denotes what format should the output string be in.
+ * -debug         Runs debug mode, shows more details about progress and errrors.
 
 #### Basic example:
 
@@ -50,11 +51,11 @@ use to modify the output format.
 
 Possible values: 'g', 'c', 'p', 'pp'
 
-  * g - genomic reference sequence
+ * g - genomic reference sequence
     * ignored if input sequence is in g.
-  * c  - coding DNA reference sequence
-  * p  - protein reference sequence, 1-letter coding
-  * pp - protein reference sequence, 3-letter coding
+ * c  - coding DNA reference sequence
+ * p  - protein reference sequence, 1-letter coding
+ * pp - protein reference sequence, 3-letter coding
 
 DEFAULTS TO: 'g' or 'p' if input sequence is in g.
 
@@ -99,9 +100,10 @@ G132D
 ```
 ### Usage of gnottFile.py
 Arguments are similar to gnott.py, with extra -i argument:
-usage: gnottFile.py \[-h] \[-i {g,c,p}] \[-o {g,c,p,pp}] [-debug] filename
 
--i {g,c,p}     Denotes what format are the variants in.
--o {g,c,p,pp}  Denotes what format should the output string be in.
--debug         Runs debug mode, shows more details about progress and
-                 errrors.
+```bash
+usage: gnottFile.py \[-h] \[-i {g,c,p}] \[-o {g,c,p,pp}] [-debug] filename
+```
+ * -i {g,c,p}     Denotes what format are the variants in.
+ * -o {g,c,p,pp}  Denotes what format should the output string be in.
+ * -debug         Runs debug mode, shows more details about progress and errrors.
