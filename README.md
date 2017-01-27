@@ -32,6 +32,11 @@ This scipt can theoretically take any input that Transvar accepts. The only requ
 ### Limitation
 this script will skip mutations ending with 'X' or 'Fs', since the output of Transvar for this type of input is not useful for the use-case this script was originally created for.
 
+gnott.py \[-h] [-o g,c,p,pp] string
+
+-o {g,c,p,pp}  Denotes what format should the output string be in.
+-debug         Runs debug mode, shows more details about progress and errrors.
+
 #### Basic example:
 
 ```bash
@@ -62,7 +67,7 @@ chr7:c.1438G>T
 
 ### Input level detection
 
-#### example with cDNA input, output modifier 'p'
+#### Example with cDNA input, output modifier 'p'
 
 ```bash
 python gnott.py 'NM_000492.3:c.1438G>T' -o p
@@ -75,9 +80,28 @@ If the input is genomic level annotation (g),then the output is HGVS coded prote
 
 In this case, output modifier -o can only be c or p, and defaults to p. If modifier g is passed, it will be ignored.
 
-#### example with protein level input, output modifier 'c' 
+#### Example with protein level input, output modifier 'c' 
 
 ```bash
 python gnott.py 'chr7:g.117199563G>T' -o c
 NM_000492:c.1438G>T
 ```
+## Batch processing
+Script gnottFile.py automatically reads lines in a file and calls gnott with the correct input. This script expects the first line in supplied file to be an HGVS protein code, and variants on next lines.
+
+Example of a valid input file:
+```bash
+NM_000314
+L70V
+D326N
+N276S
+G132D
+```
+### Usage of gnottFile.py
+Arguments are similar to gnott.py, with extra -i argument:
+usage: gnottFile.py \[-h] \[-i {g,c,p}] \[-o {g,c,p,pp}] [-debug] filename
+
+-i {g,c,p}     Denotes what format are the variants in.
+-o {g,c,p,pp}  Denotes what format should the output string be in.
+-debug         Runs debug mode, shows more details about progress and
+                 errrors.
