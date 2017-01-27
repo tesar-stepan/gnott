@@ -17,18 +17,29 @@ OUPP = "pp"
 
 VALID_OUT_MODIFIERS = [OUG, OUC, OUP, OUPP]
 VALID_OM_USAGE = str(VALID_OUT_MODIFIERS).translate(None, " []'")
-MSG_TRANSVAR_NO = "\033[91m Transvar was not detected, please install transvar first."
-MSG_TRANSVAR_CALL_ERR = "\033[91m ERROR - Transvar call failed."
-MSG_TRANSVAR_OUTPUT_ERR = "\033[91m ERROR - Transvar output is in an unrecognised format:"
-MSG_OUTPUT_RSEQ_NO = "\033[91m ERROR - Could't find reference sequence in transvar output:"
-MSG_OUTPUT_CODESEQ_NO = "\033[91m ERROR - Could't find mutation codes in transvar output:"
-MSG_OUTPUT_MUTSEQ_NO = "\033[91m ERROR - Could't find mutation sequence for type '%s' in transvar output:"
-MSG_OUTPUT_CHROMOS_NO = "\033[91m ERROR - Could't find the chromosome number in transvar output:"
-MSG_TRANSVAR_EX = "\033[91m TRANSVAR EXCEPTION"
-MSG_VALUE_ERR = "\033[91m ERROR DURING Popen CALL"
-MSG_INPUT_PARSE_ERR = "\033[91m INPUT PROCESSING ERROR - %s"
+
+FORBIDDEN_SUFXS = ["x", "fs"] #use lowercase
+
+#these messages have to mathc Transvar error messages
+TVAR_MSG_NOVALIDTR = "no_valid_transcript_found"
+
+MSG_OUTPUT_RSEQ_NO = "ERROR - Could't find reference sequence in transvar output"
+MSG_OUTPUT_CODESEQ_NO = "ERROR - Could't find mutation codes in transvar output"
+MSG_OUTPUT_MUTSEQ_NO = "ERROR - Could't find mutation sequence for type '%s' in transvar output"
+MSG_OUTPUT_CHROMOS_NO = "ERROR - Could't find the chromosome number in transvar output"
+MSG_OUTPUT_TRANSCRIPT_NO = "ERROR - TRANSVAR: Transcript not found"
+MSG_OUTPUT_SKIP = "SKIPPED"
+
+MSG_FORBIDDEN_SUFX = "\033[93m WARN - Forbidden suffix detected, skipping. \x1B[39m"
+MSG_TRANSVAR_NO = "\033[91m Transvar was not detected, please install transvar first. \x1B[39m"
+MSG_TRANSVAR_CALL_ERR = "\033[91m ERROR - Transvar call failed. \x1B[39m"
+MSG_TRANSVAR_OUTPUT_ERR = "\033[91m ERROR - Transvar output is in an unrecognised format: \x1B[39m"
+MSG_TRANSVAR_EX = "\033[91m TRANSVAR EXCEPTION \x1B[39m"
+MSG_VALUE_ERR = "\033[91m ERROR DURING Popen CALL \x1B[39m"
+MSG_INPUT_PARSE_ERR = "\033[91m INPUT PROCESSING ERROR - %s \x1B[39m"
 MSG_ARG1_DESC = "HGVS encoded string to be parsed."
-MSG_ARG2_DESC = "denotes what format should the output string be in."
+MSG_ARG2_DESC = "Denotes what format should the output string be in."
+MSG_ARG3_DESC = "Runs debug mode, shows more details about progress and errrors."
 MSG_USAGE = """
 gnott.py [-h] [-o {0}] string
 
@@ -41,6 +52,10 @@ NOTE - this scipt can theoretically take any input that
        the string has a ":x" sequence in it, where the
        'x' is one of g/c/p characters, denoting the
        type of encoding.
+     - known limitations: this script will skip mutations
+       ending with 'X' or 'Fs', since the output of Transvar
+       for this type of input is not useful for the use-case
+       this script was originally created for.
 -------------------------------------------------------
 Protein level annotation example:
     input  : python gnott.py 'NM_000492.3:p.Gly480Cys'
@@ -81,7 +96,6 @@ def printd(msg):
     if (DEBUG): print msg
     return
 
-
 #variable setup
 inputSequence = ""
 inMode = ""
@@ -94,11 +108,13 @@ parser = argparse.ArgumentParser(
     formatter_class=RawTextHelpFormatter, usage=MSG_USAGE)
 parser.add_argument("string", help=MSG_ARG1_DESC)
 parser.add_argument("-o", help=MSG_ARG2_DESC, choices=VALID_OUT_MODIFIERS)
+parser.add_argument("-debug", help=MSG_ARG3_DESC, action='store_true', default=False)
 args = parser.parse_args()
 if (args.o):
     outMode = args.o
 
 inputSequence = args.string
+DEBUG = args.debug
 
 #Preprocessing the input sequence
 inputSequence.replace(" ", "")
@@ -119,6 +135,12 @@ printd("input mode detected: %s" % ch)
 if (inMode == ING and outMode == OUG):
     outMode = OUP
 
+#Input sequence checks
+if(inputSequence.lower().endswith(tuple(FORBIDDEN_SUFXS))):
+    printd(MSG_FORBIDDEN_SUFX)
+    print MSG_OUTPUT_SKIP;
+    sys.exit()
+
 #Preparing arguments for transvar
 protMode = ""
 tvarMode = ""
@@ -128,7 +150,7 @@ if (outMode == OUPP):
     outMode = OUP
 
 tvarMode = "%sanno" % inMode
-targs = ["transvar", tvarMode, "-i", inputSequence, "--ucsc"]
+targs = ["transvar", tvarMode, "-i", inputSequence, "--ucsc", "--ccds"]
 
 if (protMode != ""):
     printd("Protein mode: %s" % protMode)
@@ -159,19 +181,23 @@ printd(tvar)
 lines = tvar.splitlines()
 if (tvar == "" or len(lines) < 2):
     print MSG_TRANSVAR_OUTPUT_ERR
-    print tvar
+    printd(tvar)
 result = lines[1]
 
 ## extracting the chromosome and mutation coding sequence
 try:
     coding_full = re.search(
-        '\schr\d:(g.\d+\S+/)(c.\d+\S+/)(p.\D{1,3}\d+\D{1,3})\s',
+        '\schr\d+:(g.\d+\S+/)(c.\d+\S+/)(p.\D{1,3}\d+\D{1,3})\s',
         result).group(0)
     printd("Found mutation codes: %s" % coding_full)
     coding_full = coding_full.strip()
 except AttributeError:
-    print MSG_OUTPUT_CODESEQ_NO
-    print result
+    # check if this is no_valid_transcript_found problem
+    if(result.endswith(TVAR_MSG_NOVALIDTR)):
+        print MSG_OUTPUT_TRANSCRIPT_NO
+    else:
+        print MSG_OUTPUT_CODESEQ_NO
+        printd(result)
     sys.exit()
 
 ## composing base of output for g-type input
@@ -187,17 +213,17 @@ if (inMode == ING):
         output += ":"
     except AttributeError:
         print MSG_OUTPUT_RSEQ_NO
-        print result
+        printd(result)
         sys.exit()
 
 ## composing base of output for non g-type input
 else:
     try:
-        chromos = re.search('chr\d:', coding_full).group(0)
+        chromos = re.search('chr\d+:', coding_full).group(0)
         output = chromos
     except AttributeError:
         print MSG_OUTPUT_CHROMOS_NO
-        print result
+        printd(result)
         sys.exit()
 
 ## composing rest of output
@@ -212,7 +238,7 @@ try:
         regexp = "c.\d+\S+/"
     mutc = re.search(regexp, coding_full).group(0)
 
-    print("Found mutation seq %s: %s" % (outMode, mutc))
+    printd("Found mutation seq %s: %s" % (outMode, mutc))
 
     mutc = mutc.strip()
     if (stripSlash):
@@ -220,7 +246,7 @@ try:
     output += mutc
 except AttributeError:
     print MSG_OUTPUT_MUTSEQ_NO % outMode
-    print result
+    printd(result)
     sys.exit()
 
 # outputting the final string
