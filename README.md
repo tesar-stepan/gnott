@@ -104,6 +104,17 @@ Arguments are similar to gnott.py, with extra -i argument:
 ```bash
 usage: gnottFile.py \[-h] \[-i {g,c,p}] \[-o {g,c,p,pp}] [-debug] filename
 ```
- * -i {g,c,p}     Denotes what format are the variants in.
+ * -i {g,c,p,a}     Denotes what format are the variants in.
  * -o {g,c,p,pp}  Denotes what format should the output string be in.
  * -debug         Runs debug mode, shows more details about progress and errrors.
+
+### Input modifier -i
+This tells gnott what its looking at in the input file. The example above would require value "p" for the -i argument to be processed correctly.
+
+If you have multiple levels of annotations in single file, include the level modifier in the file. E.g.:
+```bash
+NM_000314
+p.L70V
+p.D326N
+```
+and run gnottFile with "-i a". The "a" value will detect the level automatically for each line (but it has to be present for all lines). 
