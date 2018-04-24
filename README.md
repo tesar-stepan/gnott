@@ -5,7 +5,7 @@ This script takes a string argument in HGVS format, and translates it to genomic
 Useful for cerain use-case specific batch procesing.
 
 ## Instalation
-Gnott itself is a simple python script - just download and run in python, but it requires that transvar is present in your system.
+Gnott itself is a simple python script - just download and run in python. The only prerequisite is having transvar installed.
 
 #### Transvar setup:
 
